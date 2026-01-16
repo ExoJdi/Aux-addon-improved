@@ -12,7 +12,8 @@ This fork adds multiple quality-of-life, safety, and stability improvements to t
 - UI scale slider (0.50 → 2.00) with numeric input
 - Added **Clear item cache** button (UI alternative to `/aux clear item cache`)
 
-<!-- Screenshot: Options Window -->
+<img width="466" height="410" alt="image" src="https://github.com/user-attachments/assets/d02b5176-ba64-40a4-92f7-0403331c6da9" />
+
 
 ---
 
@@ -21,7 +22,8 @@ This fork adds multiple quality-of-life, safety, and stability improvements to t
 - External UI addons (e.g. ElvUI crafting cost calculation) now correctly prefer daily prices
 - Historical price is used automatically as fallback when daily data is unavailable
 
-<!-- Screenshot: Tooltip Price Order -->
+<img width="169" height="155" alt="image" src="https://github.com/user-attachments/assets/6f55319b-d2e0-416a-b256-1ac136ab62c8" />
+
 
 ---
 
@@ -30,7 +32,8 @@ This fork adds multiple quality-of-life, safety, and stability improvements to t
 - Prevents accidental mass buyouts at extreme prices
 - Warning / confirmation shown when price exceeds safe thresholds
 
-<!-- Screenshot: Multi Buyout Warning -->
+<img width="1141" height="704" alt="image" src="https://github.com/user-attachments/assets/57c63acf-f473-4029-8b2c-5578783ac06d" />
+
 
 ---
 
@@ -44,6 +47,7 @@ This fork adds multiple quality-of-life, safety, and stability improvements to t
 #### Full Scan Stability
 - Full auction scans can be interrupted safely
 - Switching between fast scan and full scan no longer corrupts scan state
+<img width="1164" height="697" alt="image" src="https://github.com/user-attachments/assets/c55da811-0bf4-49b0-bf39-475f4f18d4e4" />
 
 ---
 
@@ -52,7 +56,6 @@ This fork adds multiple quality-of-life, safety, and stability improvements to t
 - Full **Drag & Drop** support into the Post item slot
 - Correct handling of itemID and suffix variants
 
-<!-- Screenshot: Post Tab Drag & Drop -->
 
 ---
 
