@@ -83,9 +83,9 @@ This fork adds multiple quality-of-life, safety, and stability improvements to t
 ***
 ***
 
-# aux - WoW 1.12 AddOn
+# aux - WoW 3.3.5a AddOn
 
-The most advanced auction house addOn for the 1.12 client with some features more advanced than anything even on retail.
+The most advanced auction house addOn for the 3.3.5a client with some features more advanced than anything even on retail.
 
 ## Core Features
 
