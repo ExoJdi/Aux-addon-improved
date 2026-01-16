@@ -1,0 +1,57 @@
+## Interface: 30300
+## Author: shirsig, Jdi
+## Version: 2.1.19
+## Title: Aux-addon
+## Notes: Auction House replacement
+## SavedVariables: aux, aux_scale, aux_post_bid, aux_ignore_owner, aux_items, aux_item_ids, aux_auctionable_items, aux_merchant_buy, aux_merchant_sell
+
+libs\Compat.lua
+libs\Module.lua
+libs\T.lua
+
+Aux-addon.lua
+Util.lua
+Control.lua
+Color.lua
+gui\Core.lua
+gui\Settings.lua
+Frame.lua
+
+util\Persistence.lua
+util\Sort.lua
+util\Money.lua
+util\Info.lua
+util\Filter.lua
+util\Scan.lua
+util\Completion.lua
+
+core\Cache.lua
+core\History.lua
+core\Disenchant.lua
+core\Slash.lua
+core\Scan.lua
+core\Stack.lua
+core\Post.lua
+core\Tooltip.lua
+
+gui\Listing.lua
+gui\Auction_listing.lua
+gui\Item_listing.lua
+
+tabs\search\Core.lua
+tabs\search\Results.lua
+tabs\search\Saved.lua
+tabs\search\Filter.lua
+tabs\search\Frame.lua
+
+tabs\post\Core.lua
+tabs\post\Frame.lua
+
+tabs\auctions\Core.lua
+tabs\auctions\Frame.lua
+
+tabs\bids\Core.lua
+tabs\bids\Frame.lua
+
+tabs\scan\Core.lua
+tabs\scan\Frame.lua
