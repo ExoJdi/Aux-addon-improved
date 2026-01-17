@@ -32,7 +32,7 @@ This fork adds multiple quality-of-life, safety, and stability improvements to t
 - Prevents accidental mass buyouts at extreme prices
 - Warning / confirmation shown when price exceeds safe thresholds
 
-<img width="1141" height="704" alt="image" src="https://github.com/user-attachments/assets/57c63acf-f473-4029-8b2c-5578783ac06d" />
+<img width="1179" height="704" alt="image" src="https://github.com/user-attachments/assets/9c6d48f7-814c-4a3a-8e13-bd1ae215ce30" />
 
 
 ---
