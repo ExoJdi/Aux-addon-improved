@@ -129,23 +129,15 @@ SetItemRef = vararg-function(arg)
 		return (aux_orig_SetItemRef or nop)(unpack(arg))
 	end
 	if (AuxFrame and AuxFrame:IsShown()) and (IsShiftKeyDown() or IsAltKeyDown()) and active_tab and active_tab.USE_ITEM and strfind(arg[1], '^item:%d+') then
-		if active_tab.name == 'Post' then
-			local item_id = tonumber(select(3, strfind(arg[1], '^item:(%d+)'))) or 0
-			local suffix_id = tonumber(select(3, strfind(arg[1], '^item:%d+:%d+:%d+:%d+:%d+:%d+:(-?%d+)'))) or 0
-			if item_id and item_id > 0 then
-				active_tab.USE_ITEM(item_id, suffix_id or 0)
+		local name = GetItemInfo(arg[1])
+		if not name then
+			local _, _, item_id = strfind(arg[1], '^item:(%d+)')
+			if item_id then
+				name = GetItemInfo(tonumber(item_id))
 			end
-		else
-			local name = GetItemInfo(arg[1])
-			if not name then
-				local _, _, item_id = strfind(arg[1], '^item:(%d+)')
-				if item_id then
-					name = GetItemInfo(tonumber(item_id))
-				end
-			end
-			if name then
-				active_tab.USE_ITEM(nil, nil, nil, nil, name)
-			end
+		end
+		if name then
+			active_tab.USE_ITEM(nil, nil, nil, nil, name)
 		end
 		return
 	end
@@ -162,29 +154,15 @@ HandleModifiedItemClick = vararg-function(arg)
 	if not (AuxFrame and AuxFrame:IsShown()) then return end
 	if not arg[1] or not strfind(arg[1], 'item:%d+') then return end
 	if (IsShiftKeyDown() or IsAltKeyDown()) and active_tab and active_tab.USE_ITEM then
-		-- Post tab needs the *exact* item (id + suffix). Other tabs use the name.
-		if active_tab.name == 'Post' then
-			local item_id, suffix_id
-			if strfind(arg[1], '^item:%d+') then
-				item_id = tonumber(select(3, strfind(arg[1], '^item:(%d+)'))) or 0
-				suffix_id = tonumber(select(3, strfind(arg[1], '^item:%d+:%d+:%d+:%d+:%d+:%d+:(-?%d+)'))) or 0
-			else
-				item_id, suffix_id = info.parse_link(arg[1])
-			end
-			if item_id and item_id > 0 then
-				active_tab.USE_ITEM(item_id, suffix_id or 0)
-			end
+		local name
+		if strfind(arg[1], '^item:%d+') then
+			name = GetItemInfo(arg[1])
 		else
-			local name
-			if strfind(arg[1], '^item:%d+') then
-				name = GetItemInfo(arg[1])
-			else
-				local _, _, _, _, parsed_name = info.parse_link(arg[1])
-				name = parsed_name
-			end
-			if name then
-				active_tab.USE_ITEM(nil, nil, nil, nil, name)
-			end
+			local item_id, suffix_id, unique_id, enchant_id, parsed_name = info.parse_link(arg[1])
+			name = parsed_name
+		end
+		if name then
+			active_tab.USE_ITEM(nil, nil, nil, nil, name)
 		end
 	end
 end

@@ -88,14 +88,12 @@ function M.extend_tooltip(tooltip, link, quantity)
 	local value = history.daily_value(item_key)
 	local historical_value = history.historical(item_key)
     if auctionable then
-		-- Important: some UIs (e.g. ElvUI crafting cost) pick the *last* money-formatted line
-		-- in the tooltip as "the" item value. Keep Value (daily) last so it wins over Historical.
-		if settings.historical then
-			tooltip:AddLine('Historical: ' .. (historical_value and money.to_string2(historical_value * quantity) or UNKNOWN), color.tooltip.value())
-		end
-		if settings.value then
-			tooltip:AddLine('Value: ' .. (value and money.to_string2(value * quantity) or UNKNOWN), color.tooltip.value())
-		end
+			if settings.historical then
+				tooltip:AddLine('Historical: ' .. (historical_value and money.to_string2(historical_value * quantity) or UNKNOWN), color.tooltip.value())
+			end
+			if settings.value then
+				tooltip:AddLine('Value: ' .. (value and money.to_string2(value * quantity) or UNKNOWN), color.tooltip.value())
+			end
     end
 
     if tooltip == GameTooltip and game_tooltip_money > 0 then

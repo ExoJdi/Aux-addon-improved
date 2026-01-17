@@ -1,69 +1,52 @@
-📘 README (User Documentation)
-Aux – Extended Version (WotLK 3.3.5a)
+# Aux-addon (WoW 3.3.5a)
 
-This is a modified and extended version of Aux for
-World of Warcraft 3.3.5a (Wrath of the Lich King).
+Auction House UI replacement.
 
-The addon keeps full compatibility with the original Aux database and logic,
-while improving usability, stability, and compatibility with modern UI packs such as ElvUI.
+**Version:** 2.1.19  
+**Authors:** shirsig, Jdi
 
-Commands
-/aux
+## Key changes
 
-Opens the Options window.
+### Hotkeys
+- **Shift OR Alt** inserts the item into Aux search (modified item click).
+- Row actions (works with **Shift OR Alt**):
+  - **Search tab**: Left Click = buyout, Right Click = bid
+  - **Bids tab**: Left Click = buyout, Right Click = bid
+  - **Auctions tab**: Click = cancel
 
-Options Window
-Options
+### Tooltip: Value + Historical
+- **Value**: last Fast/Full Scan minimum buyout per item.
+- **Historical**: historical value from stored scan history.
 
-All original Aux settings are available as checkboxes:
-- Ignore owner
-- Post bid
-- Tooltip value
-- Tooltip historical
-- Tooltip merchant buy
-- Tooltip merchant sell
-- Tooltip disenchant value
-- Tooltip disenchant distribution
+### Scan tab
+- **Full Scan**: classic Aux scan (page-by-page, full stats).
+- **Fast Scan (Auctionator-like)**: fast per-category scan (no QueryAll) intended to avoid freezes/disconnects.
+- Shows last scan timestamp and live progress (page, pages scanned, elapsed, ETA).
+- Stop button appears only while a scan is running.
 
-Scale
-- Slider range: 0.50 → 2.00
-- Numeric input (2 decimal precision)
-- Applied instantly to the Aux window
+### Scanning internals
+- Scan state machine (KM_PREQUERY/KM_INQUERY/KM_POSTQUERY/KM_ANALYZING).
+- Last-page detection: if a page returns **< 50** results, the query is treated as finished.
+- Duplicate-page protection (retries if the server returns the same page again).
 
-Cache Management
-- Clear item cache button
-- UI alternative to /aux clear item cache
+### Buyout X items + cancel
+- **Shift + Left Click** on a result row opens a quantity popup with item icon/name, total cost preview and progress.
+- Buys the cheapest matching lots until the requested amount is reached or no more lots.
+- Safety: if the next lot is >= **300%** of Value, the series stops and requires a second confirmation.
+- Cancel Buyout stops the series immediately.
 
-Tooltip Price Behavior
-- Value (daily) always has priority over Historical
-- If both prices exist:
-- - external addons (e.g. ElvUI crafting cost) use Value
-- If daily Value is missing:
-- - Historical price is used as fallback
+### Multi Buyout (Search tab)
+- Button in Search results: **Multi Buyout**.
+- Uses the same quantity popup and safety rules.
 
-Auction Features
+### Auctions tab
+- Shows **Total sold** at the bottom (sum of sold auctions in the current owner scan).
+- Fixes Time Left display for owner auctions:
+  - Active auctions show time remaining
+  - Sold auctions show **Sold**
+  - Expired auctions show **Expired**
+- Sold/unsold/expired auctions are not merged into the same row group.
 
-Multi Buyout (Safe Buyout)
-- Supports multi-item buyout with price safety check
-- Prevents accidental buyouts at extreme prices (e.g. 2000%+)
-- Confirmation is required when price exceeds historical thresholds
-
-Fast Scan
-- Optimized auction scan mode
-- Designed for quick market refresh
-- Reduced query overhead to avoid disconnects
-
-Full Scan
-- Complete auction house scan
-- Can be interrupted safely
-- Data is stored incrementally without corrupting history
-
-Post Tab Improvements
-- Item insertion via Alt-click and Shift-click
-- Full Drag & Drop support into the Post item slot
-- Correct handling of itemID and suffix variants
-
-Compatibility
-- World of Warcraft 3.3.5a
-- Compatible with ElvUI (WotLK)
-- No external libraries required
+## Installation
+1. Put the folder **Aux-addon** into `Interface\AddOns\`.
+2. Restart WoW or `/reload`.

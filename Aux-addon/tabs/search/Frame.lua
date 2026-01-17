@@ -231,42 +231,46 @@ do
     buyout_button = btn
 end
 do
+    -- Multi Buyout (moved before Remove)
     local btn = gui.button(frame.results)
     btn:SetPoint('TOPLEFT', buyout_button, 'TOPRIGHT', 5, 0)
+    btn:SetText('Multi Buyout')
+    btn:SetScript('OnClick', function()
+        if bid_in_progress then return end
+        local sel = current_search.table:GetSelection()
+        if sel and sel.record then
+            prompt_buyout_quantity(sel.record)
+        end
+    end)
+    btn:SetScript('OnUpdate', function()
+        if current_search.table:GetSelection() then
+            btn:Enable()
+        else
+            btn:Disable()
+        end
+    end)
+    multi_buyout_button = btn
+end
+
+do
+    -- Remove (moved after Multi Buyout)
+    local btn = gui.button(frame.results)
+    btn:SetPoint('TOPLEFT', multi_buyout_button, 'TOPRIGHT', 5, 0)
     btn:SetText('Remove')
     btn:SetScript('OnClick', function()
-	    if not bid_in_progress then
-	        current_search.table:RemoveAuctionRecord((current_search.table:GetSelection() or empty).record)
-	    end
+        if not bid_in_progress then
+            current_search.table:RemoveAuctionRecord((current_search.table:GetSelection() or empty).record)
+        end
     end)
-	btn:SetScript('OnUpdate', function()
-		if current_search.table:GetSelection() then
-			btn:Enable()
-		else
-			btn:Disable()
-		end
-	end)
-		remove_button = btn
+    btn:SetScript('OnUpdate', function()
+        if current_search.table:GetSelection() then
+            btn:Enable()
+        else
+            btn:Disable()
+        end
+    end)
+    remove_button = btn
 end
-	do
-		local btn = gui.button(frame.results)
-		btn:SetPoint('TOPLEFT', remove_button, 'TOPRIGHT', 5, 0)
-		btn:SetText('Multi Buyout')
-		btn:SetScript('OnClick', function()
-			if bid_in_progress then return end
-			local sel = current_search.table:GetSelection()
-			if sel and sel.record then
-				prompt_buyout_quantity(sel.record)
-			end
-		end)
-		btn:SetScript('OnUpdate', function()
-			if current_search.table:GetSelection() then
-				btn:Enable()
-			else
-				btn:Disable()
-			end
-		end)
-	end
 do
     local btn = gui.button(frame.saved)
     btn:SetPoint('TOPLEFT', status_bar_frame, 'TOPRIGHT', 5, 0)

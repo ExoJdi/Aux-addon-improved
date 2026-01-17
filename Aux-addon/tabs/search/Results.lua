@@ -12,7 +12,6 @@ local gui = require 'aux.gui'
 
 
 local hide_buyout_popup
-local buyout_popup_hooked
 
 local function estimate_total_cost(seed_record, desired)
 	local search = current_search
@@ -96,12 +95,6 @@ local function ensure_buyout_popup()
 	if dlg.SetPropagateKeyboardInput then dlg:SetPropagateKeyboardInput(true) end
 	dlg:Hide()
 	aux_buyout_popup = dlg
-
-		-- Close the quantity popup automatically when the main Aux window closes.
-		if AuxFrame and not buyout_popup_hooked then
-			buyout_popup_hooked = true
-			AuxFrame:HookScript('OnHide', hide_buyout_popup)
-		end
 
 	local icon = dlg:CreateTexture(nil, 'ARTWORK')
 	icon:SetSize(32, 32)
@@ -238,14 +231,12 @@ local function ensure_buyout_popup()
 				dlg.progressText:SetText('Progress: ' .. state.bought .. ' / ' .. qty .. ' items')
 				dlg.costText:SetText('Total cost: ' .. money.to_string(state.spent, true, true))
 			end
-				if state.remaining > 0 then
-					dlg.noteText:SetText('Quantity is in items. Not enough auctions to reach target.')
-				else
-					-- Target reached: close the popup like the classic Aux behaviour.
-					dlg.noteText:SetText('Buyout requested.')
-					hide_buyout_popup()
-				end
-				dlg.buyout_state = nil
+			if state.remaining > 0 then
+				dlg.noteText:SetText('Quantity is in items. Not enough auctions to reach target.')
+			else
+				dlg.noteText:SetText('Buyout requested.')
+			end
+			dlg.buyout_state = nil
 		end)
 end
 
