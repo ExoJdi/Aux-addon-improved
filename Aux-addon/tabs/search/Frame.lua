@@ -231,7 +231,6 @@ do
     buyout_button = btn
 end
 do
-    -- Multi Buyout (moved before Remove)
     local btn = gui.button(frame.results)
     btn:SetPoint('TOPLEFT', buyout_button, 'TOPRIGHT', 5, 0)
     btn:SetText('Multi Buyout')
@@ -249,11 +248,9 @@ do
             btn:Disable()
         end
     end)
-    multi_buyout_button = btn
+	multi_buyout_button = btn
 end
-
 do
-    -- Remove (moved after Multi Buyout)
     local btn = gui.button(frame.results)
     btn:SetPoint('TOPLEFT', multi_buyout_button, 'TOPRIGHT', 5, 0)
     btn:SetText('Remove')

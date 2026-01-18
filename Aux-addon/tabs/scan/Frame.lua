@@ -8,7 +8,7 @@ frame:Hide()
 
 do
     local text = frame:CreateFontString(nil, 'ARTWORK')
-    text:SetFont(gui.font, 12)
+    gui.apply_font(text, 'text')
     text:SetJustifyH('CENTER')
     text:SetPoint('BOTTOM', AuxFrame.content, 'TOP', 0, -18)
     text:SetTextColor(color.label.enabled())
@@ -46,7 +46,7 @@ end
 
 do
     local text = frame:CreateFontString(nil, 'ARTWORK')
-    text:SetFont(gui.font, 12)
+    gui.apply_font(text, 'text')
     text:SetJustifyH('CENTER')
     text:SetPoint('TOP', scan_status_bar, 'BOTTOM', 0, -8)
     text:SetTextColor(color.label.enabled())
@@ -56,7 +56,7 @@ end
 
 do
     local text = frame:CreateFontString(nil, 'ARTWORK')
-    text:SetFont(gui.font, 12)
+    gui.apply_font(text, 'text')
     text:SetJustifyH('CENTER')
     text:SetPoint('TOP', scan_pages_text, 'BOTTOM', 0, -4)
     text:SetTextColor(color.label.enabled())
@@ -65,7 +65,7 @@ do
 end
 
 do
-	local btn = gui.button(frame, 22)
+	local btn = gui.button(frame)
 	btn:SetText('Stop scan')
 	btn:SetPoint('TOP', scan_time_text, 'BOTTOM', 0, -10)
 	btn:SetScript('OnClick', function() stop_scan() end)

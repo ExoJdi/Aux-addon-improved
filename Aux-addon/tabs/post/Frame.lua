@@ -61,7 +61,7 @@ do
 	        if arg1 == 'LeftButton' then
 	            update_item(this.item_record)
 	        elseif arg1 == 'RightButton' then
-	            tab = 1
+	        on_tab_click(1)
 	            search_tab.filter = strlower(info.item(this.item_record.item_id).name) .. '/exact'
 	            search_tab.execute(nil, false)
 	        end
@@ -74,11 +74,11 @@ end
 
 bid_listing = listing.new(frame.bid_listing)
 bid_listing:SetColInfo{
-    {name='Auctions', width=.17, align='CENTER'},
+    {name='Auctions', width=.17, align='CENTER', font_role='numbers'},
     {name='Time\nLeft', width=.11, align='CENTER'},
-    {name='Stack\nSize', width=.11, align='CENTER'},
-    {name='Auction Bid\n(per item)', width=.4, align='RIGHT'},
-    {name='% Hist.\nValue', width=.21, align='CENTER'},
+    {name='Stack\nSize', width=.11, align='CENTER', font_role='numbers'},
+    {name='Auction Bid\n(per item)', width=.4, align='RIGHT', isPrice=true},
+    {name='% Hist.\nValue', width=.21, align='CENTER', font_role='numbers'},
 }
 bid_listing:SetSelection(function(data)
 	return data.record == bid_selection or data.record.historical_value and bid_selection and bid_selection.historical_value
@@ -98,11 +98,11 @@ end)
 
 buyout_listing = listing.new(frame.buyout_listing)
 buyout_listing:SetColInfo{
-	{name='Auctions', width=.17, align='CENTER'},
-	{name='Time\nLeft', width=.11, align='CENTER'},
-	{name='Stack\nSize', width=.12, align='CENTER'},
-	{name='Auction Buyout\n(per item)', width=.4, align='RIGHT'},
-	{name='% Hist.\nValue', width=.20, align='CENTER'},
+    {name='Auctions', width=.17, align='CENTER', font_role='numbers'},
+    {name='Time\nLeft', width=.11, align='CENTER'},
+    {name='Stack\nSize', width=.12, align='CENTER', font_role='numbers'},
+    {name='Auction Buyout\n(per item)', width=.4, align='RIGHT', isPrice=true},
+    {name='% Hist.\nValue', width=.20, align='CENTER', font_role='numbers'},
 }
 buyout_listing:SetSelection(function(data)
 	return data.record == buyout_selection or data.record.historical_value and buyout_selection and buyout_selection.historical_value
@@ -145,6 +145,30 @@ end
 do
 	item = gui.item(frame.parameters)
     item:SetPoint('TOPLEFT', 10, -6)
+	-- Allow drag & drop of items directly into the Post item slot.
+	-- NOTE: calling bare USE_ITEM() can collide with Blizzard's global USE_ITEM string.
+	-- Always call via module table to avoid resolving to _G.USE_ITEM.
+	item.button:SetScript('OnReceiveDrag', function()
+		local ctype, item_id, item_link = GetCursorInfo()
+		if ctype == 'item' then
+			ClearCursor()
+			local parsed_item_id, suffix_id = info.parse_link(item_link or '')
+			if parsed_item_id and parsed_item_id > 0 then
+				aux.tabs.post.USE_ITEM(parsed_item_id, suffix_id or 0)
+			end
+		end
+	end)
+	item.button:SetScript('OnMouseUp', function()
+		-- Also accept drop via mouse-up (some clients don't fire OnReceiveDrag reliably).
+		local ctype, item_id, item_link = GetCursorInfo()
+		if ctype == 'item' then
+			ClearCursor()
+			local parsed_item_id, suffix_id = info.parse_link(item_link or '')
+			if parsed_item_id and parsed_item_id > 0 then
+				aux.tabs.post.USE_ITEM(parsed_item_id, suffix_id or 0)
+			end
+		end
+	end)
     item.button:SetScript('OnEnter', function()
         if selected_item then
             info.set_tooltip(selected_item.itemstring, this, 'ANCHOR_RIGHT')

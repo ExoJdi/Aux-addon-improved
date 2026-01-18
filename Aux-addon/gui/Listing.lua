@@ -83,6 +83,7 @@ local methods = {
 			    col:SetHeight(self.headHeight)
 			    col.text:SetText(self.colInfo[i].name or '')
 			    col.text:SetJustifyH(self.colInfo[i].headAlign or 'CENTER')
+			    gui.apply_font(col.text, 'title')
 		    else
 			    col:Hide()
 		    end
@@ -105,7 +106,9 @@ local methods = {
 				    if self.headCols[j] and self.colInfo[j] then
 					    col:Show()
 					    col:SetWidth(self.colInfo[j].width * width)
-					    col.text:SetJustifyH(self.colInfo[j].align or 'LEFT')
+                        col.text:SetJustifyH(self.colInfo[j].align or 'LEFT')
+                        local role = self.colInfo[j].font_role or (self.colInfo[j].isPrice and 'numbers') or 'text'
+                        gui.apply_font(col.text, role)
 				    else
 					    col:Hide()
 				    end
@@ -173,7 +176,7 @@ local methods = {
 
 	    local text = col:CreateFontString()
 	    text:SetAllPoints()
-	    text:SetFont(gui.font, 12)
+	    gui.apply_font(text, 'title')
 	    text:SetTextColor(color.label.enabled())
         col.text = text
 
@@ -196,9 +199,9 @@ local methods = {
         local row = self.rows[rowNum]
         local colNum = getn(row.cols) + 1
         local cell = CreateFrame('Frame', nil, row)
-        local text = cell:CreateFontString()
+	    local text = cell:CreateFontString()
         cell.text = text
-        text:SetFont(gui.font, ROW_TEXT_SIZE)
+	    gui.apply_font(text, 'text')
         text:SetJustifyV('CENTER')
         text:SetPoint('TOPLEFT', 1, -1)
         text:SetPoint('BOTTOMRIGHT', -1, 1)

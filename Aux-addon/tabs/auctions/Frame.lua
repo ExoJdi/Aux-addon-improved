@@ -17,7 +17,7 @@ listing = auction_listing.new(frame.listing, 20, auction_listing.auctions_column
 listing.group_key_fn = function(record) return record.item_key .. ':' .. (record.sale_status or 0) end
 listing:SetSort(1, 2, 3, 4, 5, 6, 7, 8)
 listing:Reset()
-listing:SetHandler('OnDatabaseChanged', function() update_totals() end)
+listing:SetHandler('OnDatabaseChanged', function() update_total_sold() end)
 listing:SetHandler('OnClick', function(row, button)
     if (IsShiftKeyDown() or IsAltKeyDown()) and listing:GetSelection().record == row.record then
         cancel_button:Click()
@@ -52,27 +52,23 @@ do
 end
 
 do
-    -- Totals area (two-line text)
-    local holder = CreateFrame('Frame', nil, frame)
-    holder:SetPoint('LEFT', refresh_button, 'RIGHT', 10, 0)
-    holder:SetPoint('RIGHT', blizzard_ui_button, 'LEFT', -10, 0)
-    holder:SetHeight(24)
+	local text = frame:CreateFontString(nil, 'ARTWORK')
+	-- Fixed size (not tied to font settings).
+	text:SetFont(gui.get_font(), 12, 'NONE')
+	text:SetJustifyH('LEFT')
+	text:SetPoint('TOPLEFT', refresh_button, 'TOPRIGHT', 10, -4)
+	text:SetPoint('RIGHT', blizzard_ui_button, 'LEFT', -10, 0)
+	text:SetTextColor(color.label.enabled())
+	total_sold_text = text
+end
 
-    local sold = holder:CreateFontString(nil, 'ARTWORK')
-    sold:SetFont(gui.font, 12)
-    sold:SetJustifyH('LEFT')
-    sold:SetPoint('TOPLEFT', holder, 'TOPLEFT', 0, 0)
-    sold:SetPoint('TOPRIGHT', holder, 'TOPRIGHT', 0, 0)
-    sold:SetHeight(12)
-    sold:SetTextColor(color.label.enabled())
-    total_sold_text = sold
-
-    local posted = holder:CreateFontString(nil, 'ARTWORK')
-    posted:SetFont(gui.font, 12)
-    posted:SetJustifyH('LEFT')
-    posted:SetPoint('BOTTOMLEFT', holder, 'BOTTOMLEFT', 0, 0)
-    posted:SetPoint('BOTTOMRIGHT', holder, 'BOTTOMRIGHT', 0, 0)
-    posted:SetHeight(12)
-    posted:SetTextColor(color.label.enabled())
-    total_posted_text = posted
+do
+	local text = frame:CreateFontString(nil, 'ARTWORK')
+	-- Fixed size (not tied to font settings).
+	text:SetFont(gui.get_font(), 12, 'NONE')
+	text:SetJustifyH('LEFT')
+	text:SetPoint('TOPLEFT', refresh_button, 'TOPRIGHT', 10, -16)
+	text:SetPoint('RIGHT', blizzard_ui_button, 'LEFT', -10, 0)
+	text:SetTextColor(color.label.enabled())
+	total_post_text = text
 end

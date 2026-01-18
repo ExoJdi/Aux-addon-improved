@@ -3,13 +3,213 @@ module 'aux.gui'
 include 'T'
 include 'aux'
 
-M.font = [[Fonts\ARIALN.TTF]]
+-- NOTE ABOUT THIS MODULE SYSTEM:
+-- Identifiers can only be defined ONCE.
+-- To allow runtime changes, we keep mutable tables and expose them via PUBLIC accessors.
 
-M.font_size = immutable-{
-	small = 13,
-	medium = 15,
-	large = 18,
+-- Internal mutable storage (PRIVATE identifiers)
+local font = { path = [[Fonts\ARIALN.TTF]] }
+local font_size = { small = 13, medium = 15, large = 18 }
+
+-- Per-role font settings (used by Settings -> Fonts)
+-- Roles: title, text, buttons, numbers
+local role_fonts = {
+	title = { path = font.path, size = font_size.large, outline = 'NONE' },
+	text = { path = font.path, size = font_size.medium, outline = 'NONE' },
+	buttons = { path = font.path, size = font_size.medium, outline = 'NONE' },
+	numbers = { path = font.path, size = font_size.medium, outline = 'NONE' },
 }
+
+-- forward declaration (LOAD2 uses this)
+local refresh_fonts
+
+-- Public accessors (these create interface fields `gui.font` and `gui.font_size`)
+M.get_font = function() return font.path end
+M.get_font_size = function() return font_size end
+M.get_role_fonts = function() return role_fonts end
+
+--
+-- Font settings (LibSharedMedia-3.0 optional)
+--
+-- IMPORTANT: Do NOT call character_data() at file load time.
+-- The aux cache becomes available only after VARIABLES_LOADED/PLAYER_LOGIN.
+--
+
+local function get_lsm()
+	if LibStub then
+		return LibStub('LibSharedMedia-3.0', true)
+	end
+end
+
+-- Persisted font settings are applied on PLAYER_LOGIN.
+function LOAD2()
+	local defaults = {
+		-- legacy
+		font_name = nil, small = font_size.small, medium = font_size.medium, large = font_size.large,
+		-- per-role
+		roles = {
+			title = { font_name = nil, size = role_fonts.title.size, outline = role_fonts.title.outline },
+			text = { font_name = nil, size = role_fonts.text.size, outline = role_fonts.text.outline },
+			buttons = { font_name = nil, size = role_fonts.buttons.size, outline = role_fonts.buttons.outline },
+			numbers = { font_name = nil, size = role_fonts.numbers.size, outline = role_fonts.numbers.outline },
+		},
+	}
+	local fs = character_data('fonts', defaults)
+
+	-- Sizes
+	if fs and (fs.small or fs.medium or fs.large) then
+		font_size.small = tonumber(fs.small) or font_size.small
+		font_size.medium = tonumber(fs.medium) or font_size.medium
+		font_size.large = tonumber(fs.large) or font_size.large
+	end
+
+	local LSM = get_lsm()
+	-- Font face (legacy single face)
+	if LSM and fs and fs.font_name then
+		local path = LSM:Fetch('font', fs.font_name, true)
+		if type(path) == 'string' and path ~= '' then
+			font.path = path
+		end
+	end
+	-- Per-role fonts (preferred)
+	if fs and fs.roles then
+		for role, opts in pairs(fs.roles) do
+			if role_fonts[role] then
+				role_fonts[role].size = tonumber(opts.size) or role_fonts[role].size
+				role_fonts[role].outline = opts.outline or role_fonts[role].outline
+				if LSM and opts.font_name then
+					local path = LSM:Fetch('font', opts.font_name, true)
+					if type(path) == 'string' and path ~= '' then
+						role_fonts[role].path = path
+					end
+				elseif font.path then
+					role_fonts[role].path = font.path
+				end
+			end
+		end
+	else
+		-- keep roles in sync with legacy font
+		for _, rf in pairs(role_fonts) do
+			rf.path = font.path
+		end
+	end
+
+	-- Apply persisted fonts to existing Aux UI (created before PLAYER_LOGIN).
+	if _G.AuxFrame then
+		refresh_fonts(_G.AuxFrame)
+	end
+end
+
+
+-- Set role font params.
+function M.set_role_font(role, path, size, outline)
+	if not role_fonts[role] then return end
+	if type(path) == 'string' and path ~= '' then
+		role_fonts[role].path = path
+	end
+	role_fonts[role].size = tonumber(size) or role_fonts[role].size
+	role_fonts[role].outline = outline or role_fonts[role].outline
+end
+
+-- Apply a role font to a FontString.
+-- NOTE: inside this module, call `apply_font(...)` (not `M.apply_font(...)`).
+-- `M` is a write-only public modifier in this module system.
+function apply_font(fontstring, role, size_override)
+	if not fontstring or not fontstring.SetFont then return end
+	local rf = role_fonts[role or 'text'] or role_fonts.text
+	local o = tonumber(size_override)
+	local size = o or rf.size
+	fontstring.__aux_font_role = role or 'text'
+	-- Only persist a size override if it's NOT one of the standard size buckets.
+	-- Bucket sizes are intended to follow role changes.
+	if o and (math.abs(o - font_size.small) > 0.1) and (math.abs(o - font_size.medium) > 0.1) and (math.abs(o - font_size.large) > 0.1) then
+		fontstring.__aux_font_size_override = o
+	else
+		fontstring.__aux_font_size_override = nil
+	end
+	fontstring:SetFont(rf.path, size, rf.outline)
+end
+
+-- Public export
+M.apply_font = apply_font
+
+-- Change font sizes (small/medium/large) and keep M.* in sync.
+function M.set_font_sizes(small, medium, large)
+	font_size.small = tonumber(small) or font_size.small
+	font_size.medium = tonumber(medium) or font_size.medium
+	font_size.large = tonumber(large) or font_size.large
+end
+
+-- Set current font path.
+function M.set_font_path(path)
+	if type(path) == 'string' and path ~= '' then
+		local old_font = font.path
+		font.path = path
+		-- keep role paths in sync unless overridden later
+		for _, r in pairs(role_fonts) do
+			if r.path == nil or r.path == '' or r.path == old_font then
+				r.path = path
+			end
+		end
+	end
+end
+
+-- Refresh existing FontStrings inside a frame. Best-effort: only updates strings
+-- that use the previous Aux font and one of the known size buckets.
+-- Refresh existing FontStrings inside a frame.
+-- Pass old_font/old_sizes if you call this after changing the font settings.
+function refresh_fonts(root, old_font, old_sizes)
+	if not root or not root.GetRegions then return end
+
+	old_font = old_font or font.path
+	old_sizes = old_sizes or { small = font_size.small, medium = font_size.medium, large = font_size.large }
+
+	local old_small, old_medium, old_large = old_sizes.small, old_sizes.medium, old_sizes.large
+
+	local function map_size(sz)
+		if not sz then return nil end
+		if sz <= 0 then return nil end
+		if math.abs(sz - old_small) < 0.1 then return font_size.small end
+		if math.abs(sz - old_medium) < 0.1 then return font_size.medium end
+		if math.abs(sz - old_large) < 0.1 then return font_size.large end
+		return sz
+	end
+
+	local function safe_size(sz)
+		sz = tonumber(sz)
+		if not sz or sz <= 0 then
+			return font_size.small
+		end
+		return sz
+	end
+
+	local function walk(f)
+		local regions = { f:GetRegions() }
+		for _, r in ipairs(regions) do
+			if r and r.GetObjectType and r:GetObjectType() == 'FontString' then
+				local _, fsize, fflags = r:GetFont()
+				local role = r.__aux_font_role
+				if role and role_fonts[role] then
+					local rf = role_fonts[role]
+					local override = tonumber(r.__aux_font_size_override)
+					r:SetFont(rf.path, safe_size(override or rf.size), rf.outline or fflags)
+				else
+					-- legacy/untracked fontstrings: best-effort mapping of the old size buckets
+					r:SetFont(font.path, safe_size(map_size(fsize) or fsize), fflags)
+				end
+			end
+		end
+		local children = { f:GetChildren() }
+		for _, c in ipairs(children) do
+			walk(c)
+		end
+	end
+
+	walk(root)
+end
+
+-- export (module system treats M as write-only inside this file)
+M.refresh_fonts = refresh_fonts
 
 
 
@@ -156,7 +356,8 @@ function M.checkbutton(parent, text_height)
 end
 
 function M.button(parent, text_height)
-    text_height = text_height or font_size.large
+    -- If caller did not request an explicit pixel height, let role settings control size.
+    -- Bucket sizes (gui.font_size.small/medium/large) should follow the role.
     local button = CreateFrame('Button', nil, parent)
     set_size(button, 80, 24)
     set_content_style(button)
@@ -166,7 +367,14 @@ function M.button(parent, text_height)
     button.highlight = highlight
     do
         local label = button:CreateFontString()
-        label:SetFont(font, text_height)
+		    -- per-role font: buttons
+		    do
+            if text_height and (math.abs(text_height - font_size.small) > 0.1) and (math.abs(text_height - font_size.medium) > 0.1) and (math.abs(text_height - font_size.large) > 0.1) then
+                apply_font(label, 'buttons', text_height)
+            else
+                apply_font(label, 'buttons')
+            end
+        end
         label:SetAllPoints(button)
         label:SetJustifyH('CENTER')
         label:SetJustifyV('CENTER')
@@ -219,7 +427,7 @@ do
 		tab.text:SetAllPoints()
 		tab.text:SetJustifyH('CENTER')
 		tab.text:SetJustifyV('CENTER')
-		tab.text:SetFont(font, font_size.large)
+			apply_font(tab.text, 'buttons')
 		tab:SetFontString(tab.text)
 
 		tab:SetText(text)
@@ -345,8 +553,8 @@ function M.editbox(parent)
 	    self.overlay:SetJustifyH(alignment)
     end
     function editbox:SetFontSize(size)
-	    self:SetFont(font, size)
-	    self.overlay:SetFont(font, size)
+	    self:SetFont(font.path, size)
+	    self.overlay:SetFont(font.path, size)
     end
     local overlay = label(editbox)
     overlay:SetPoint('LEFT', 1.5, 0)
@@ -455,7 +663,15 @@ end
 
 function M.label(parent, size)
     local label = parent:CreateFontString()
-    label:SetFont(font, size or font_size.small)
+    -- Per-role font: title for large labels, otherwise text.
+    -- If size is one of the standard buckets, let the role setting control the size.
+    local s = size or font_size.small
+    local role = (s >= font_size.large) and 'title' or 'text'
+    if s and (math.abs(s - font_size.small) > 0.1) and (math.abs(s - font_size.medium) > 0.1) and (math.abs(s - font_size.large) > 0.1) then
+        apply_font(label, role, s)
+    else
+        apply_font(label, role)
+    end
     label:SetTextColor(color.label.enabled())
     return label
 end
@@ -504,7 +720,7 @@ function M.dropdown(parent)
     text:ClearAllPoints()
     text:SetPoint('RIGHT', button, 'LEFT', -2, 0)
     text:SetPoint('LEFT', 8, 0)
-    text:SetFont(font, font_size.medium)
+	apply_font(text, 'text')
     text:SetShadowColor(0, 0, 0, 0)
 
     return dropdown
@@ -532,7 +748,7 @@ function M.slider(parent)
     label:SetPoint('BOTTOMRIGHT', slider, 'TOPRIGHT', 6, 8)
     label:SetJustifyH('LEFT')
     label:SetHeight(13)
-    label:SetFont(font, font_size.small)
+    label:SetFont(font.path, font_size.small)
     label:SetTextColor(color.label.enabled())
 
     local editbox = editbox(slider)

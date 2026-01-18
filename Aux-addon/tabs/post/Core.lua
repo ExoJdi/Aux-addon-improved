@@ -48,12 +48,20 @@ local settings_schema = {'tuple', '#', {duration='number'}, {start_price='number
 
 local scan_id, inventory_records, bid_records, buyout_records = 0, {}, {}, {}
 
+-- persisted per-item post settings (init early so callers before LOAD2 don't crash)
+local data = {}
+
 function get_default_settings()
 	return O('duration', DURATION_24, 'start_price', 0, 'buyout_price', 0, 'hidden', false)
 end
 
 function LOAD2()
-	data = faction_data'post'
+	local t = faction_data'post'
+	if type(t) ~= 'table' then
+		t = {}
+		faction_data('post', t)
+	end
+	data = t
 end
 
 function read_settings(item_key)

@@ -30,33 +30,29 @@ function update_listing()
     listing:SetDatabase(auction_records)
 end
 
-function update_totals()
-    if not total_posted_text then return end
-    local sold_total = 0
-    local posted_total = 0
-
-    for _, record in ipairs(auction_records) do
-        local status = record.sale_status or 0
-        local price = (record.high_bid or 0) > 0 and record.high_bid or (((record.buyout_price or 0) > 0 and record.buyout_price) or (record.start_price or 0))
-        price = price or 0
-
-        if status == 1 then
-            sold_total = sold_total + price
-        else
-            posted_total = posted_total + price
-        end
-    end
-
-    if total_sold_text then
-        if sold_total > 0 then
-            total_sold_text:SetText('Total Sold: ' .. money.to_string(sold_total, true, true))
-            total_sold_text:Show()
-        else
-            total_sold_text:Hide()
-        end
-    end
-
-    total_posted_text:SetText('Total Posted: ' .. money.to_string(posted_total, true, true))
+function update_total_sold()
+	if not total_sold_text then return end
+	local sold_total = 0
+	local posted_total = 0
+	for _, record in ipairs(auction_records) do
+		local price = (record.high_bid or 0) > 0 and record.high_bid or ((record.buyout_price or 0) > 0 and record.buyout_price or (record.start_price or 0))
+		posted_total = posted_total + (price or 0)
+		if (record.sale_status or 0) == 1 then
+			sold_total = sold_total + (price or 0)
+		end
+	end
+	if sold_total > 0 then
+		total_sold_text:SetText('Total sold: ' .. money.to_string(sold_total, true, true))
+		if total_post_text then
+			total_post_text:SetText('Total posted: ' .. money.to_string(posted_total, true, true))
+		end
+	else
+		-- no sold auctions: show only posted in the first line to avoid wasting space
+		total_sold_text:SetText('Total posted: ' .. money.to_string(posted_total, true, true))
+		if total_post_text then
+			total_post_text:SetText('')
+		end
+	end
 end
 
 function M.scan_auctions()

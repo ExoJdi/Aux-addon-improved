@@ -129,15 +129,23 @@ SetItemRef = vararg-function(arg)
 		return (aux_orig_SetItemRef or nop)(unpack(arg))
 	end
 	if (AuxFrame and AuxFrame:IsShown()) and (IsShiftKeyDown() or IsAltKeyDown()) and active_tab and active_tab.USE_ITEM and strfind(arg[1], '^item:%d+') then
-		local name = GetItemInfo(arg[1])
-		if not name then
-			local _, _, item_id = strfind(arg[1], '^item:(%d+)')
-			if item_id then
-				name = GetItemInfo(tonumber(item_id))
+		if active_tab.name == 'Post' then
+			local item_id = tonumber(select(3, strfind(arg[1], '^item:(%d+)'))) or 0
+			local suffix_id = tonumber(select(3, strfind(arg[1], '^item:%d+:%d+:%d+:%d+:%d+:%d+:(-?%d+)'))) or 0
+			if item_id and item_id > 0 then
+				active_tab.USE_ITEM(item_id, suffix_id or 0)
 			end
-		end
-		if name then
-			active_tab.USE_ITEM(nil, nil, nil, nil, name)
+		else
+			local name = GetItemInfo(arg[1])
+			if not name then
+				local _, _, item_id = strfind(arg[1], '^item:(%d+)')
+				if item_id then
+					name = GetItemInfo(tonumber(item_id))
+				end
+			end
+			if name then
+				active_tab.USE_ITEM(nil, nil, nil, nil, name)
+			end
 		end
 		return
 	end
@@ -154,15 +162,29 @@ HandleModifiedItemClick = vararg-function(arg)
 	if not (AuxFrame and AuxFrame:IsShown()) then return end
 	if not arg[1] or not strfind(arg[1], 'item:%d+') then return end
 	if (IsShiftKeyDown() or IsAltKeyDown()) and active_tab and active_tab.USE_ITEM then
-		local name
-		if strfind(arg[1], '^item:%d+') then
-			name = GetItemInfo(arg[1])
+		-- Post tab needs the *exact* item (id + suffix). Other tabs use the name.
+		if active_tab.name == 'Post' then
+			local item_id, suffix_id
+			if strfind(arg[1], '^item:%d+') then
+				item_id = tonumber(select(3, strfind(arg[1], '^item:(%d+)'))) or 0
+				suffix_id = tonumber(select(3, strfind(arg[1], '^item:%d+:%d+:%d+:%d+:%d+:%d+:(-?%d+)'))) or 0
+			else
+				item_id, suffix_id = info.parse_link(arg[1])
+			end
+			if item_id and item_id > 0 then
+				active_tab.USE_ITEM(item_id, suffix_id or 0)
+			end
 		else
-			local item_id, suffix_id, unique_id, enchant_id, parsed_name = info.parse_link(arg[1])
-			name = parsed_name
-		end
-		if name then
-			active_tab.USE_ITEM(nil, nil, nil, nil, name)
+			local name
+			if strfind(arg[1], '^item:%d+') then
+				name = GetItemInfo(arg[1])
+			else
+				local _, _, _, _, parsed_name = info.parse_link(arg[1])
+				name = parsed_name
+			end
+			if name then
+				active_tab.USE_ITEM(nil, nil, nil, nil, name)
+			end
 		end
 	end
 end
@@ -236,14 +258,13 @@ end
 function AUCTION_HOUSE_SHOW()
 	AuctionFrame:Hide()
 	AuxFrame:Show()
-	tab = 1
+	on_tab_click(1)
 end
 
 function AUCTION_HOUSE_CLOSED()
 	post.stop()
 	stack.stop()
 	scan.abort()
-	tab = nil
 	AuxFrame:Hide()
 end
 
@@ -271,7 +292,7 @@ do
 		f:SetScript('OnMouseUp', function()
 			if arg1 == 'RightButton' then
 				if active_tab then
-					tab = 1
+					on_tab_click(1)
 					search_tab.filter = _G[this:GetName() .. 'Name']:GetText() .. '/exact'
 					search_tab.execute(nil, false)
 				end
@@ -292,7 +313,9 @@ do
 				local item_id, suffix_id = info.parse_link(link)
 				local count = select(3, GetCraftReagentInfo(id, i))
 				local _, price, limited = cache.merchant_info(item_id)
-				local value = price and not limited and price or history.value(item_id .. ':' .. suffix_id)
+				local key = item_id .. ':' .. suffix_id
+				-- Prefer the most recent daily/last value for profession cost; fall back to historical.
+				local value = price and not limited and price or history.daily_value(key) or history.value(key)
 				if not value then
 					total_cost = nil
 					break
@@ -321,7 +344,9 @@ do
 				local item_id, suffix_id = info.parse_link(link)
 				local count = select(3, GetTradeSkillReagentInfo(id, i))
 				local _, price, limited = cache.merchant_info(item_id)
-				local value = price and not limited and price or history.value(item_id .. ':' .. suffix_id)
+				local key = item_id .. ':' .. suffix_id
+				-- Prefer the most recent daily/last value for profession cost; fall back to historical.
+				local value = price and not limited and price or history.daily_value(key) or history.value(key)
 				if not value then
 					total_cost = nil
 					break

@@ -11,8 +11,15 @@ local value_cache = {}
 local fast_values
 local fast_values_time
 
+-- history storage (initialized early so callers before LOAD2 don't crash)
+local data = {}
+
 function LOAD2()
 	local realm_hist = realm_data'history'
+	if type(realm_hist) ~= 'table' then
+		realm_hist = {}
+		realm_data('history', realm_hist)
+	end
 	fast_values = realm_data'fast_values'
 	fast_values_time = realm_data'fast_values_time'
 	if type(fast_values) ~= 'table' then

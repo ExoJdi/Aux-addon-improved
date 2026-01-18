@@ -80,6 +80,7 @@ M.search_columns = {
         title = 'Lvl',
         width = .035,
         align = 'CENTER',
+        font_role = 'numbers',
         fill = function(cell, record)
             local display_level = max(record.level, 1)
             display_level = UnitLevel'player' < record.level and color.red(display_level) or display_level
@@ -93,6 +94,7 @@ M.search_columns = {
         title = 'Auctions',
         width = .06,
         align = 'CENTER',
+        font_role = 'numbers',
         fill = function(cell, record, count, own, expandable)
             local numAuctionsText = expandable and color.link(count) or count
             if own > 0 then
@@ -117,6 +119,7 @@ M.search_columns = {
         title = 'Stack\nSize',
         width = .055,
         align = 'CENTER',
+        font_role = 'numbers',
         fill = function(cell, record)
             cell.text:SetText(record.aux_quantity)
         end,
@@ -231,6 +234,7 @@ M.search_columns = {
         title = '% Hist.\nValue',
         width = .08,
         align = 'CENTER',
+        font_role = 'numbers',
         fill = function(cell, record)
             local pct, bidPct = record_percentage(record)
             cell.text:SetText((pct or bidPct) and percentage_historical(pct or bidPct, not pct) or '?')
@@ -257,6 +261,7 @@ M.auctions_columns = {
         title = 'Lvl',
         width = .035,
         align = 'CENTER',
+        font_role = 'numbers',
         fill = function(cell, record)
             local display_level = max(record.level, 1)
             display_level = UnitLevel('player') < record.level and color.red(display_level) or display_level
@@ -270,6 +275,7 @@ M.auctions_columns = {
         title = 'Auctions',
         width = .06,
         align = 'CENTER',
+        font_role = 'numbers',
         fill = function(cell, record, count, own, expandable)
             local numAuctionsText = expandable and color.link(count) or count
             cell.text:SetText(numAuctionsText)
@@ -291,6 +297,7 @@ M.auctions_columns = {
         title = 'Stack\nSize',
         width = .055,
         align = 'CENTER',
+        font_role = 'numbers',
         fill = function(cell, record)
             cell.text:SetText(record.aux_quantity)
         end,
@@ -399,6 +406,7 @@ M.bids_columns = {
         title = 'Auctions',
         width = .06,
         align = 'CENTER',
+        font_role = 'numbers',
         fill = function(cell, record, count, own, expandable)
             local numAuctionsText = expandable and color.link(count) or count
             cell.text:SetText(numAuctionsText)
@@ -420,6 +428,7 @@ M.bids_columns = {
         title = 'Stack\nSize',
         width = .055,
         align = 'CENTER',
+        font_role = 'numbers',
         fill = function(cell, record)
             cell.text:SetText(record.aux_quantity)
         end,
@@ -640,7 +649,7 @@ local methods = {
         elseif IsShiftKeyDown() and ChatFrame1EditBox:IsVisible() then
             ChatFrame1EditBox:Insert(this.record.link)
         elseif not modified and button == 'RightButton' then 
-            tab = 1
+	        on_tab_click(1)
             search_tab.filter = strlower(info.item(this.record.item_id).name) .. '/exact'
             search_tab.execute(nil, false)
         else
@@ -1006,7 +1015,8 @@ function M.new(parent, rows, columns)
 
         local text = cell:CreateFontString()
         text:SetJustifyH('CENTER')
-        text:SetFont(gui.font, 12)
+		-- Let Settings -> Fonts control sizes. Avoid hardcoded overrides for price/numeric columns.
+		gui.apply_font(text, column.isPrice and 'numbers' or 'text')
         text:SetTextColor(color.label.enabled())
         cell:SetFontString(text)
         if not column.isPrice then cell:SetText(column.title or '') end 
@@ -1057,7 +1067,8 @@ function M.new(parent, rows, columns)
             local cell = CreateFrame('Frame', nil, row)
             local text = cell:CreateFontString()
             cell.text = text
-            text:SetFont(gui.font, min(14, rt.ROW_HEIGHT))
+			-- Let Settings -> Fonts control sizes. Avoid hardcoded overrides for numeric cells.
+			gui.apply_font(text, (column.isPrice or column.align == 'RIGHT') and 'numbers' or 'text')
             text:SetJustifyH(column.align or 'LEFT')
             text:SetJustifyV('CENTER')
             text:SetPoint('TOPLEFT', 1, -1)

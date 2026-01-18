@@ -3,11 +3,27 @@ module 'aux.tabs.search'
 local filter_util = require 'aux.util.filter'
 local gui = require 'aux.gui'
 
+-- Internal mutable storage. We never re-assign these identifiers after load
+-- because the Aux module system forbids it.
+recent_searches = {}
+favorite_searches = {}
+
+local function copy_into(dst, src)
+	wipe(dst)
+	if type(src) ~= 'table' then return end
+	for i = 1, getn(src) do
+		dst[i] = src[i]
+	end
+end
+
 function LOAD2()
-	recent_searches, favorite_searches = realm_data'recent_searches', realm_data'favorite_searches'
+	-- Copy persisted data into our mutable tables.
+	copy_into(recent_searches, realm_data('recent_searches'))
+	copy_into(favorite_searches, realm_data('favorite_searches'))
 end
 
 function update_search_listings()
+	-- recent_searches / favorite_searches are initialized in LOAD2()
 	local favorite_search_rows = T
 	for i = 1, getn(favorite_searches) do
 		local search = favorite_searches[i]

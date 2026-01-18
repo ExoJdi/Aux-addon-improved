@@ -14,9 +14,26 @@ function status(enabled)
 	return (enabled and color.green'on' or color.red'off')
 end
 
-_G.SLASH_AUX1 = '/aux'
-function SlashCmdList.AUX(command)
-	if not command then return end
+local function handle_command(command)
+	-- Normalize input: some clients pass whitespace for "no args".
+	if type(command) == 'string' then
+		command = string.gsub(command, '^%s+', '')
+		command = string.gsub(command, '%s+$', '')
+	end
+
+	-- When called without arguments, open the settings window.
+	if not command or command == '' then
+		-- Use the module system (do NOT rely on _G.aux, which is a saved-variable table
+		-- and gets replaced during initialization).
+		local settings = require 'aux.gui.settings'
+		if settings and settings.toggle then
+			settings.toggle()
+		else
+			print(color.red'Aux: settings UI not available')
+		end
+		return
+	end
+
 	local arguments = tokenize(command)
 
     if arguments[1] == 'scale' and tonumber(arguments[2]) then
@@ -68,4 +85,44 @@ function SlashCmdList.AUX(command)
 		print('- clear item cache')
 		print('- populate wdb')
     end
+end
+
+-- Slash command registration is global and can be overwritten by other addons.
+-- Register on PLAYER_LOGIN so we win after all addons are loaded.
+local function register_slash()
+	_G.SLASH_AUX1 = '/aux'
+	_G.SLASH_AUXADDON1 = '/auxaddon'
+	_G.SLASH_AUXADDON2 = '/auxo'
+	SlashCmdList.AUX = handle_command
+	SlashCmdList.AUXADDON = handle_command
+end
+
+-- Some UIs/addons re-register /aux after login (or swallow it).
+-- Hook the chat slash dispatcher as a last-resort so /aux always works.
+do
+	local orig
+	orig = _G.ChatFrame_OnSlashCommand
+	if type(orig) == 'function' then
+		_G.ChatFrame_OnSlashCommand = function(msg, ...)
+			if type(msg) == 'string' then
+				local s = msg
+				local lower = string.lower(s)
+				-- Depending on client/build, msg can be "aux ..." or "/aux ...".
+				if string.find(lower, '^/aux%s*') or string.find(lower, '^aux%s*') then
+					local command = s
+					command = string.gsub(command, '^/aux%s*', '')
+					command = string.gsub(command, '^aux%s*', '')
+					handle_command(command)
+					return
+				end
+			end
+			return orig(msg, ...)
+		end
+	end
+end
+
+do
+	local f = CreateFrame('Frame')
+	f:RegisterEvent('PLAYER_LOGIN')
+	f:SetScript('OnEvent', register_slash)
 end
