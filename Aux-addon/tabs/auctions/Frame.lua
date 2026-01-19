@@ -51,24 +51,35 @@ do
 	refresh_button = btn
 end
 
+-- Totals text (sold/posted) shown between Refresh and Blizzard UI buttons.
 do
-	local text = frame:CreateFontString(nil, 'ARTWORK')
+	local f = CreateFrame('Frame', nil, frame)
+	f:SetPoint('TOPLEFT', refresh_button, 'TOPRIGHT', 10, 0)
+	f:SetPoint('BOTTOMRIGHT', blizzard_ui_button, 'BOTTOMLEFT', -10, 0)
+	totals_frame = f
+end
+
+do
+	local text = totals_frame:CreateFontString(nil, 'ARTWORK')
 	-- Fixed size (not tied to font settings).
 	text:SetFont(gui.get_font(), 12, 'NONE')
 	text:SetJustifyH('LEFT')
-	text:SetPoint('TOPLEFT', refresh_button, 'TOPRIGHT', 10, -4)
-	text:SetPoint('RIGHT', blizzard_ui_button, 'LEFT', -10, 0)
+	text:SetJustifyV('CENTER')
+	-- Default (single line) layout: vertically centered.
+	text:SetPoint('LEFT', totals_frame, 'LEFT', 0, 0)
+	text:SetPoint('RIGHT', totals_frame, 'RIGHT', 0, 0)
 	text:SetTextColor(color.label.enabled())
 	total_sold_text = text
 end
 
 do
-	local text = frame:CreateFontString(nil, 'ARTWORK')
+	local text = totals_frame:CreateFontString(nil, 'ARTWORK')
 	-- Fixed size (not tied to font settings).
 	text:SetFont(gui.get_font(), 12, 'NONE')
 	text:SetJustifyH('LEFT')
-	text:SetPoint('TOPLEFT', refresh_button, 'TOPRIGHT', 10, -16)
-	text:SetPoint('RIGHT', blizzard_ui_button, 'LEFT', -10, 0)
+	text:SetJustifyV('CENTER')
+	-- Position is applied dynamically from update_total_sold().
 	text:SetTextColor(color.label.enabled())
+	text:Hide()
 	total_post_text = text
 end

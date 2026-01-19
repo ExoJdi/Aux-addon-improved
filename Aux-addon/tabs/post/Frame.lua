@@ -61,7 +61,7 @@ do
 	        if arg1 == 'LeftButton' then
 	            update_item(this.item_record)
 	        elseif arg1 == 'RightButton' then
-	        on_tab_click(1)
+	        (require 'aux').set_tab(1)
 	            search_tab.filter = strlower(info.item(this.item_record.item_id).name) .. '/exact'
 	            search_tab.execute(nil, false)
 	        end
@@ -265,6 +265,7 @@ do
     editbox:SetHeight(22)
     editbox:SetAlignment('RIGHT')
     editbox:SetFontSize(17)
+    editbox:SetFontRole('numbers')
     editbox:SetScript('OnTabPressed', function()
 	    if IsShiftKeyDown() then
 		    stack_count_slider.editbox:SetFocus()
@@ -289,6 +290,7 @@ do
         label:SetPoint('LEFT', editbox, 'RIGHT', 8, 0)
         label:SetWidth(50)
         label:SetJustifyH('CENTER')
+        gui.apply_font(label, 'numbers')
         start_price_percentage = label
     end
     unit_start_price_input = editbox
@@ -300,6 +302,7 @@ do
     editbox:SetHeight(22)
     editbox:SetAlignment('RIGHT')
     editbox:SetFontSize(17)
+    editbox:SetFontRole('numbers')
     editbox:SetScript('OnTabPressed', function()
         if IsShiftKeyDown() then
             unit_start_price_input:SetFocus()
@@ -324,6 +327,7 @@ do
         label:SetPoint('LEFT', editbox, 'RIGHT', 8, 0)
         label:SetWidth(50)
         label:SetJustifyH('CENTER')
+        gui.apply_font(label, 'numbers')
         buyout_price_percentage = label
     end
     unit_buyout_price_input = editbox
@@ -331,6 +335,7 @@ end
 do
 	local label = gui.label(frame.parameters, gui.font_size.medium)
 	label:SetPoint('TOPLEFT', unit_buyout_price_input, 'BOTTOMLEFT', 0, -24)
+	gui.apply_font(label, 'numbers')
 	deposit = label
 end
 

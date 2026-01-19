@@ -93,6 +93,20 @@ local function build()
 	frame:RegisterForDrag('LeftButton')
 	frame:SetScript('OnDragStart', function() this:StartMoving() end)
 	frame:SetScript('OnDragStop', function() this:StopMovingOrSizing() end)
+
+		-- Allow closing the settings window with ESC (standard WoW behaviour).
+		if _G.UISpecialFrames then
+			for _, n in ipairs(_G.UISpecialFrames) do
+				if n == 'AuxSettingsFrame' then
+					frame._esc_registered = true
+					break
+				end
+			end
+			if not frame._esc_registered then
+				tinsert(_G.UISpecialFrames, 'AuxSettingsFrame')
+				frame._esc_registered = true
+			end
+		end
 	frame:Hide()
 
 	local title = gui.label(frame, gui.font_size.large)

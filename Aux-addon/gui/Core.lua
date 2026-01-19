@@ -552,15 +552,23 @@ function M.editbox(parent)
 	    self:SetJustifyH(alignment)
 	    self.overlay:SetJustifyH(alignment)
     end
-    function editbox:SetFontSize(size)
-	    self:SetFont(font.path, size)
-	    self.overlay:SetFont(font.path, size)
-    end
+    function editbox:SetFontRole(role)
+	self.__aux_font_role = role or self.__aux_font_role or 'text'
+	apply_font(self, self.__aux_font_role, self.__aux_font_size_override)
+	apply_font(self.overlay, self.__aux_font_role, self.__aux_font_size_override)
+end
+function editbox:SetFontSize(size)
+	-- Keep size overrides stable even when font roles change.
+	self.__aux_font_size_override = tonumber(size)
+	apply_font(self, self.__aux_font_role or 'text', self.__aux_font_size_override)
+	apply_font(self.overlay, self.__aux_font_role or 'text', self.__aux_font_size_override)
+end
     local overlay = label(editbox)
     overlay:SetPoint('LEFT', 1.5, 0)
     overlay:SetPoint('RIGHT', -1.5, 0)
     overlay:SetTextColor(color.text.enabled())
     editbox.overlay = overlay
+    editbox.__aux_font_role = 'text'
     editbox:SetAlignment('LEFT')
     editbox:SetFontSize(font_size.medium)
     return editbox
@@ -604,8 +612,12 @@ do
 	        local text_frame = CreateFrame('Frame', nil, self)
 	        text_frame:SetFrameLevel(level + 4)
 	        text_frame:SetAllPoints(self)
-	        local text = label(text_frame, font_size.medium)
+	        -- Status bar text should use the same font role as buttons.
+	        local text = text_frame:CreateFontString(nil, 'ARTWORK')
+	        apply_font(text, 'buttons')
 	        text:SetTextColor(color.text.enabled())
+	        text:SetJustifyH('CENTER')
+	        text:SetJustifyV('CENTER')
 	        text:SetPoint('CENTER', 0, 0)
 	        self.text = text
 	    end
@@ -715,6 +727,48 @@ function M.dropdown(parent)
     button:SetScale(.9)
     button:SetPoint('RIGHT', dropdown, 0, 0)
     dropdown.button = button
+
+    -- Where the dropdown list opens from.
+    -- We want: list TOPRIGHT anchored to button TOPLEFT.
+    if UIDropDownMenu_SetAnchor then
+        UIDropDownMenu_SetAnchor(dropdown, 0, 0, 'TOPRIGHT', button, 'TOPLEFT')
+    else
+        dropdown.point = 'TOPRIGHT'
+        dropdown.relativePoint = 'TOPLEFT'
+        dropdown.relativeTo = button
+        dropdown.xOffset = 0
+        dropdown.yOffset = 0
+    end
+
+    -- Skin the dropdown arrow button.
+    -- Use provided textures for WotLK: normal/down, pushed/highlight, disabled.
+    do
+        local tex_base = 'Interface\\AddOns\\Aux-addon\\textures\\UI-ScrollBar-ScrollDownButton-'
+        local normal_tex = tex_base .. 'Down.blp'
+        local active_tex = tex_base .. 'Highlight.blp'
+        local disabled_tex = tex_base .. 'Disabled.blp'
+
+        set_size(button, 18, 18)
+        set_content_style(button, 2, 2, 2, 2)
+
+        if button.aux_arrow then
+            button.aux_arrow:Hide()
+        end
+
+        button:SetNormalTexture(normal_tex)
+        button:SetPushedTexture(active_tex)
+        button:SetHighlightTexture(active_tex)
+        button:SetDisabledTexture(disabled_tex)
+
+        local n = button:GetNormalTexture()
+        if n then n:SetTexCoord(0, 1, 0, 1) n:SetAllPoints(button) end
+        local p = button:GetPushedTexture()
+        if p then p:SetTexCoord(0, 1, 0, 1) p:SetAllPoints(button) end
+        local h = button:GetHighlightTexture()
+        if h then h:SetTexCoord(0, 1, 0, 1) h:SetAllPoints(button) end
+        local d = button:GetDisabledTexture()
+        if d then d:SetTexCoord(0, 1, 0, 1) d:SetAllPoints(button) end
+    end
 
     local text = _G[dropdown:GetName() .. 'Text']
     text:ClearAllPoints()

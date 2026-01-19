@@ -46,13 +46,26 @@ end
 local function update_buyout_popup_cost()
 	local dlg = aux_buyout_popup
 	if not dlg or not dlg.record then return end
-	local qty = tonumber(dlg.editbox:GetText() or '')
+	local qtyText = (dlg.editbox and dlg.editbox.GetText) and (dlg.editbox:GetText() or '') or ''
+	local qty = tonumber(qtyText)
 	qty = qty and max(1, floor(qty)) or nil
+
+	-- If no quantity is entered, don't show a dummy 'Total cost: -' line.
 	if not qty then
-		dlg.costText:SetText('Total cost: -')
+		dlg.costText:Hide()
+		dlg.noteText:ClearAllPoints()
+		dlg.noteText:SetPoint('TOP', dlg.editbox, 'BOTTOM', 0, -12)
 		dlg.noteText:SetText('Quantity is in items.')
 		return
 	end
+
+	-- Restore default layout when quantity becomes valid.
+	dlg.costText:Show()
+	dlg.costText:ClearAllPoints()
+	dlg.costText:SetPoint('TOP', dlg.editbox, 'BOTTOM', 0, -12)
+	dlg.noteText:ClearAllPoints()
+	dlg.noteText:SetPoint('TOP', dlg.costText, 'BOTTOM', 0, -4)
+
 	local total, ok = estimate_total_cost(dlg.record, qty)
 	if total then
 		dlg.costText:SetText('Total cost: ' .. money.to_string(total, true, true))
@@ -115,14 +128,17 @@ local function ensure_buyout_popup()
 	icon_border:SetBackdropBorderColor(color.panel.border())
 	dlg.icon_border = icon_border
 
-	local nameText = dlg:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
+	local nameText = dlg:CreateFontString(nil, 'ARTWORK')
+	gui.apply_font(nameText, 'text')
 	nameText:SetPoint('TOPLEFT', icon, 'TOPRIGHT', 10, -2)
 	nameText:SetPoint('TOPRIGHT', dlg, 'TOPRIGHT', -16, -20)
 	nameText:SetJustifyH('LEFT')
 	nameText:SetHeight(18)
 	dlg.nameText = nameText
 
-	local qtyLabel = dlg:CreateFontString(nil, 'ARTWORK', 'GameFontHighlightSmall')
+	local qtyLabel = dlg:CreateFontString(nil, 'ARTWORK')
+	gui.apply_font(qtyLabel, 'text')
+	qtyLabel:SetTextColor(color.text.enabled())
 	qtyLabel:SetPoint('TOP', dlg, 'TOP', 0, -68)
 	qtyLabel:SetJustifyH('CENTER')
 	qtyLabel:SetText('Buyout quantity (items):')
@@ -139,19 +155,25 @@ local function ensure_buyout_popup()
 		eb.change = update_buyout_popup_cost
 		dlg.editbox = eb
 
-	local costText = dlg:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
+	local costText = dlg:CreateFontString(nil, 'ARTWORK')
+	gui.apply_font(costText, 'numbers')
+	costText:SetTextColor(color.text.enabled())
 	costText:SetPoint('TOP', eb, 'BOTTOM', 0, -12)
 	costText:SetJustifyH('CENTER')
 	costText:SetText('Total cost: -')
 	dlg.costText = costText
 
-	local noteText = dlg:CreateFontString(nil, 'ARTWORK', 'GameFontHighlightSmall')
+	local noteText = dlg:CreateFontString(nil, 'ARTWORK')
+	gui.apply_font(noteText, 'text')
+	noteText:SetTextColor(color.text.enabled())
 	noteText:SetPoint('TOP', costText, 'BOTTOM', 0, -4)
 	noteText:SetJustifyH('CENTER')
 	noteText:SetText('Quantity is in items.')
 	dlg.noteText = noteText
 
-		local progressText = dlg:CreateFontString(nil, 'ARTWORK', 'GameFontHighlightSmall')
+		local progressText = dlg:CreateFontString(nil, 'ARTWORK')
+	gui.apply_font(progressText, 'text')
+	progressText:SetTextColor(color.text.enabled())
 		progressText:SetPoint('BOTTOM', dlg, 'BOTTOM', 0, 16)
 	progressText:SetJustifyH('CENTER')
 	progressText:SetText('')
@@ -267,7 +289,17 @@ function prompt_buyout_quantity(record)
 	aux_buyout_popup.icon:SetTexture(item and item.texture or nil)
 	aux_buyout_popup.nameText:SetText(item and item.name or 'Item')
 	aux_buyout_popup.editbox:SetText('')
-	aux_buyout_popup.costText:SetText('Total cost: -')
+	-- Name should follow Text font role and item quality color.
+	local q = item and item.quality
+	if q then
+		local r, g, b = GetItemQualityColor(q)
+		aux_buyout_popup.nameText:SetTextColor(r, g, b)
+	else
+		aux_buyout_popup.nameText:SetTextColor(color.text.enabled())
+	end
+	aux_buyout_popup.costText:Hide()
+	aux_buyout_popup.noteText:ClearAllPoints()
+	aux_buyout_popup.noteText:SetPoint('TOP', aux_buyout_popup.editbox, 'BOTTOM', 0, -12)
 	aux_buyout_popup.noteText:SetText('Quantity is in items.')
 	aux_buyout_overlay:Show()
 	aux_buyout_popup:ClearAllPoints()

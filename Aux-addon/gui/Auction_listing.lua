@@ -566,6 +566,39 @@ function M.time_left(code)
     return TIME_LEFT_STRINGS[code]
 end
 
+
+
+local function header_font_role(column)
+    if not column then return 'text' end
+    if column.head_font_role then return column.head_font_role end
+    if column.font_role then return column.font_role end
+    if column.isPrice then return 'numbers' end
+
+    local t = column.title
+    if type(t) == 'table' then
+        t = t[1]
+    end
+    if type(t) == 'string' then
+        t = gsub(t, '\n', ' ')
+        t = strlower(t)
+        -- strip WoW color codes
+        t = gsub(t, '|c%x%x%x%x%x%x%x%x', '')
+        t = gsub(t, '|r', '')
+        if strfind(t, 'item') or strfind(t, 'seller') or strfind(t, 'status') or strfind(t, 'high bidder') then
+            return 'text'
+        end
+        if strfind(t, 'lvl') or strfind(t, 'auction') or strfind(t, 'stack') or strfind(t, '%%') or strfind(t, 'hist') then
+            return 'numbers'
+        end
+    end
+    return (column.align == 'RIGHT') and 'numbers' or 'text'
+end
+
+local function cell_font_role(column)
+    if not column then return 'text' end
+    return column.font_role or (column.isPrice and 'numbers') or ((column.align == 'RIGHT') and 'numbers') or 'text'
+end
+
 local methods = {
 
     ResizeColumns = function(self)
@@ -649,7 +682,7 @@ local methods = {
         elseif IsShiftKeyDown() and ChatFrame1EditBox:IsVisible() then
             ChatFrame1EditBox:Insert(this.record.link)
         elseif not modified and button == 'RightButton' then 
-	        on_tab_click(1)
+	        (require 'aux').set_tab(1)
             search_tab.filter = strlower(info.item(this.record.item_id).name) .. '/exact'
             search_tab.execute(nil, false)
         else
@@ -1014,13 +1047,21 @@ function M.new(parent, rows, columns)
         cell:SetScript('OnClick', rt.OnHeadColumnClick)
 
         local text = cell:CreateFontString()
-        text:SetJustifyH('CENTER')
-		-- Let Settings -> Fonts control sizes. Avoid hardcoded overrides for price/numeric columns.
-		gui.apply_font(text, column.isPrice and 'numbers' or 'text')
+		-- Header titles should match other Aux tables (Listing.lua): centered + title font role.
+		text:SetJustifyH(column.head_align or 'CENTER')
+		text:SetJustifyV('CENTER')
+		text:SetWordWrap(true)
+		gui.apply_font(text, 'buttons')
         text:SetTextColor(color.label.enabled())
         cell:SetFontString(text)
-        if not column.isPrice then cell:SetText(column.title or '') end 
-        text:SetAllPoints()
+		if column.isPrice and type(column.title) == 'table' then
+			cell:SetText(column.title[price_per_unit and 1 or 2])
+		else
+			cell:SetText(column.title or '')
+		end
+		-- Small insets so adjacent headers don't visually "stick" together.
+		text:SetPoint('TOPLEFT', 3, -2)
+		text:SetPoint('BOTTOMRIGHT', -3, 2)
 
         local tex = cell:CreateTexture()
         tex:SetAllPoints()
@@ -1068,7 +1109,7 @@ function M.new(parent, rows, columns)
             local text = cell:CreateFontString()
             cell.text = text
 			-- Let Settings -> Fonts control sizes. Avoid hardcoded overrides for numeric cells.
-			gui.apply_font(text, (column.isPrice or column.align == 'RIGHT') and 'numbers' or 'text')
+			gui.apply_font(text, cell_font_role(column))
             text:SetJustifyH(column.align or 'LEFT')
             text:SetJustifyV('CENTER')
             text:SetPoint('TOPLEFT', 1, -1)

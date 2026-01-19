@@ -11,6 +11,26 @@ local HEAD_HEIGHT = 27
 local HEAD_SPACE = 2
 local DEFAULT_COL_INFO = {{width=1}}
 
+
+local function header_font_role(col)
+    if not col then return 'text' end
+    if col.head_font_role then return col.head_font_role end
+    if col.font_role then return col.font_role end
+    if col.isPrice then return 'numbers' end
+    local name = col.name
+    if type(name) ~= 'string' then return 'text' end
+	local t = name:gsub('|c%x%x%x%x%x%x%x%x',''):gsub('|r','')
+	-- normalise (strip newlines/tabs, collapse whitespace)
+	t = t:gsub('\\n', ' '):gsub('\\t', ' '):gsub('%s+', ' '):lower():gsub('^%s+', ''):gsub('%s+$', '')
+    if t == 'item' or t == 'seller' or t == 'status' or t == 'high bidder' then
+        return 'text'
+    end
+    if t == 'lvl' or t == 'auctions' or t:find('stack') or t:find('auction bid') or t:find('auction buyout') or t:find('%% hist') or t:find('%%hist') then
+        return 'numbers'
+    end
+    return 'text'
+end
+
 local handlers = {
     OnEnter = function()
         this.mouseover = true
@@ -83,7 +103,9 @@ local methods = {
 			    col:SetHeight(self.headHeight)
 			    col.text:SetText(self.colInfo[i].name or '')
 			    col.text:SetJustifyH(self.colInfo[i].headAlign or 'CENTER')
-			    gui.apply_font(col.text, 'title')
+				-- Column header titles should follow the same role as other buttons in Aux.
+				-- (The column data beneath can still use per-column text/numbers/item roles.)
+				gui.apply_font(col.text, 'buttons')
 		    else
 			    col:Hide()
 		    end
@@ -175,9 +197,12 @@ local methods = {
         col.colNum = colNum
 
 	    local text = col:CreateFontString()
-	    text:SetAllPoints()
-	    gui.apply_font(text, 'title')
-	    text:SetTextColor(color.label.enabled())
+	text:SetJustifyV('CENTER')
+	text:SetWordWrap(true)
+	text:SetPoint('TOPLEFT', 3, -2)
+	text:SetPoint('BOTTOMRIGHT', -3, 2)
+	gui.apply_font(text, 'text')
+	text:SetTextColor(color.label.enabled())
         col.text = text
 
 	    local tex = col:CreateTexture()
