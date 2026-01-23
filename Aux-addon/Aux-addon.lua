@@ -315,7 +315,7 @@ do
 				local _, price, limited = cache.merchant_info(item_id)
 				local key = item_id .. ':' .. suffix_id
 				-- Prefer the most recent daily/last value for profession cost; fall back to historical.
-				local value = price and not limited and price or history.daily_value(key) or history.value(key)
+				local value = (price and not limited and price > 0) and price or history.daily_value(key) or history.value(key) or history.historical(key)
 				if not value then
 					total_cost = nil
 					break
@@ -346,7 +346,7 @@ do
 				local _, price, limited = cache.merchant_info(item_id)
 				local key = item_id .. ':' .. suffix_id
 				-- Prefer the most recent daily/last value for profession cost; fall back to historical.
-				local value = price and not limited and price or history.daily_value(key) or history.value(key)
+				local value = (price and not limited and price > 0) and price or history.daily_value(key) or history.value(key) or history.historical(key)
 				if not value then
 					total_cost = nil
 					break
