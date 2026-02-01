@@ -181,6 +181,13 @@ function clear_form()
 	update_filter_display()
 end
 
+-- Clears only the Post Filter (Filter Builder) component list.
+function clear_post_filter()
+	wipe(post_filter)
+	post_filter_index = 0
+	update_filter_display()
+end
+
 function import_filter_string()
 	local filter, error = filter_util.parse_filter_string(select(3, strfind(search_box:GetText(), '^([^;]*)')))
 	if filter or print(error) then
@@ -322,7 +329,7 @@ function set_filter_display_offset(x_offset, y_offset)
 end
 
 function initialize_filter_dropdown()
-	for _, filter in ipairs(temp-A('and', 'or', 'not', 'price', 'profit', 'vendor-profit', 'disenchant-profit', 'percent', 'bid-price', 'bid-profit', 'bid-vendor-profit', 'bid-disenchant-profit', 'bid-percent', 'item', 'tooltip', 'min-level', 'max-level', 'rarity', 'left', 'utilizable')) do
+	for _, filter in ipairs(temp-A('and', 'or', 'not', 'price', 'profit', 'vendor-profit', 'disenchant-profit', 'percent', 'bid-price', 'bid-profit', 'bid-vendor-profit', 'bid-disenchant-profit', 'bid-percent', 'item', 'tooltip', 'min-level', 'max-level', 'min-ilvl', 'max-ilvl', 'rarity', 'left', 'utilizable')) do
 		UIDropDownMenu_AddButton(O(
 			'text', filter,
 			'value', filter,

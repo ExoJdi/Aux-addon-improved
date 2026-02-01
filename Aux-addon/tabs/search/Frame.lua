@@ -294,6 +294,13 @@ do
     btn3:SetPoint('LEFT', btn2, 'RIGHT', 5, 0)
     btn3:SetText('Import')
     btn3:SetScript('OnClick', import_filter_string)
+
+    local btn4 = gui.button(frame.filter)
+    btn4:SetPoint('LEFT', btn3, 'RIGHT', 5, 0)
+    btn4:SetText('Reset')
+    btn4:SetScript('OnClick', function()
+        clear_post_filter()
+    end)
 end
 do
     local editbox = gui.editbox(frame.filter)
@@ -383,14 +390,15 @@ do
     label:SetText('-')
     max_level_input = editbox
 end
+
 do
-    local checkbox = gui.checkbox(frame.filter)
-    checkbox:SetPoint('TOPLEFT', max_level_input, 'TOPRIGHT', 16, 0)
-    checkbox:SetScript('OnClick', update_form)
-    local label = gui.label(checkbox, gui.font_size.small)
-    label:SetPoint('BOTTOMLEFT', checkbox, 'TOPLEFT', -2, 1)
-    label:SetText('Usable')
-    usable_checkbox = checkbox
+	local checkbox = gui.checkbox(frame.filter)
+	checkbox:SetPoint('TOPLEFT', max_level_input, 'TOPRIGHT', 16, 0)
+	checkbox:SetScript('OnClick', update_form)
+	local label = gui.label(checkbox, gui.font_size.small)
+	label:SetPoint('BOTTOMLEFT', checkbox, 'TOPLEFT', -2, 1)
+	label:SetText('Usable')
+	usable_checkbox = checkbox
 end
 do
     local dropdown = gui.dropdown(frame.filter)

@@ -86,6 +86,53 @@ M.filters = {
         end
     },
 
+    -- Item level (iLvl) filters.
+    -- 3.3.5a note:
+    -- * Aux does not store iLvl in auction records.
+    -- * The only reliable source is GetItemInfo(...), but it can return nil if the item isn't cached yet.
+    --
+    -- We follow the same principle as Auctionator: use GetItemInfo(link) and if it's not cached yet,
+    -- we *prime the cache* by touching the hyperlink, but we DO NOT parse iLvl from tooltip text.
+    ['min-ilvl'] = {
+        input_type = 'number',
+        validator = function(ilvl)
+            return function(auction_record)
+                local link = auction_record.link or auction_record.itemstring or auction_record.item_id
+                if not link then
+                    return true
+                end
+
+                local item_level = select(4, _G.GetItemInfo(link))
+                -- Not cached yet -> don't filter out
+                if not item_level or item_level <= 0 then
+                    return true
+                end
+
+                return item_level >= ilvl
+            end
+        end
+    },
+
+    ['max-ilvl'] = {
+        input_type = 'number',
+        validator = function(ilvl)
+            return function(auction_record)
+                local link = auction_record.link or auction_record.itemstring or auction_record.item_id
+                if not link then
+                    return true
+                end
+
+                local item_level = select(4, _G.GetItemInfo(link))
+
+                if not item_level or item_level <= 0 then
+                    return true
+                end
+
+                return item_level <= ilvl
+            end
+        end
+    },
+
     ['bid-price'] = {
         input_type = 'money',
         validator = function(amount)

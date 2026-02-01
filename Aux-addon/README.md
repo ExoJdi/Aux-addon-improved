@@ -2,7 +2,7 @@
 
 Auction House UI replacement.
 
-**Version:** 2.1.19  
+**Version:** 2.2.1 
 **Authors:** shirsig, Jdi
 
 ## Key changes
